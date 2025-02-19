@@ -19,9 +19,24 @@ export default function Shipments() {
   const fetchShipments = async () => {
     try {
       const response = await apiClient.get("/shipments");
-      // Access the shipments array from the document
-      setShipments(response?.shipments || []);
+      console.log("API Response:", response);
+
+      // Sort shipments by createdDate in descending order (newest first)
+      const sortedShipments = [...response.data].sort((a, b) => {
+        // Parse the full datetime string
+        const dateA = new Date(
+          a.createdDate.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1")
+        );
+        const dateB = new Date(
+          b.createdDate.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1")
+        );
+
+        return dateB - dateA;
+      });
+
+      setShipments(sortedShipments || []);
     } catch (err) {
+      console.error("Fetch error:", err);
       setError("Failed to load existing shipments");
     }
   };
@@ -32,7 +47,7 @@ export default function Shipments() {
       setError(null);
       setProgress({ current: 0, total: 0 });
 
-      // First part - get all shipment IDs (unchanged)
+      // First part - get all shipment IDs
       const allShipmentsResponse = await apiClient.get(
         "/amazon/shipments/test",
         {
@@ -53,7 +68,7 @@ export default function Shipments() {
         total: allShipmentIds.length,
       });
 
-      // Process shipments in batches (unchanged logic)
+      // Process shipments in batches
       const BATCH_SIZE = 10;
       const allProcessedShipments = [];
 
@@ -80,7 +95,7 @@ export default function Shipments() {
         }
       }
 
-      // Save to database
+      // Save to database with correct data structure
       await apiClient.post("/shipments", {
         shipments: allProcessedShipments,
       });
@@ -88,6 +103,7 @@ export default function Shipments() {
       // Refresh shipments from database
       await fetchShipments();
     } catch (err) {
+      console.error("Generate report error:", err);
       setError(err.message || "Failed to generate report");
     } finally {
       setIsLoading(false);

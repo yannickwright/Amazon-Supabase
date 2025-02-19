@@ -229,7 +229,7 @@ export default function ShipmentReport({
 
               <div
                 id="discrepancy-filter"
-                className="hidden absolute left-[200px] top-1 z-10"
+                className="hidden absolute left-[185px] top-1 z-10"
               >
                 <div className="flex flex-row items-center gap-6">
                   <button
@@ -247,7 +247,7 @@ export default function ShipmentReport({
                     className={`text-sm font-inter px-3 py-1 rounded-full transition-colors ${
                       showDiscrepancies === "WITH_DISCREPANCIES"
                         ? "bg-[#34A853] text-white"
-                        : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                        : "bg-gray-300 text-gray-600 hover:bg-gray-400"
                     }`}
                   >
                     Only With Discrepancies
