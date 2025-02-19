@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/libs/supabase/server";
 import clientPromise from "@/libs/mongo";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/libs/next-auth";
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -17,11 +21,11 @@ export async function POST(req) {
     const collection = db.collection("returns");
 
     // Delete all existing returns data for this user
-    await collection.deleteMany({ userEmail: session.user.email });
+    await collection.deleteMany({ userEmail: user.email });
 
     // Create document with report data
     const returnDocument = {
-      userEmail: session.user.email,
+      userEmail: user.email,
       reportId,
       data,
       createdAt: new Date(),

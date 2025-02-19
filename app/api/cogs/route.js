@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/libs/supabase/server";
 import clientPromise from "@/libs/mongo";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/libs/next-auth";
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -27,14 +31,14 @@ export async function POST(req) {
 
     // Convert cogs object to array of documents
     const cogsArray = Object.entries(cogs).map(([sku, cost]) => ({
-      userEmail: session.user.email,
+      userEmail: user.email,
       sku,
       cost: parseFloat(cost),
       updatedAt: new Date(),
     }));
 
     // Delete existing COGs for this user and insert new ones
-    await collection.deleteMany({ userEmail: session.user.email });
+    await collection.deleteMany({ userEmail: user.email });
     if (cogsArray.length > 0) {
       await collection.insertMany(cogsArray);
     }
@@ -48,8 +52,13 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -57,9 +66,7 @@ export async function GET(req) {
     const db = client.db();
     const collection = db.collection("cogs");
 
-    const cogs = await collection
-      .find({ userEmail: session.user.email })
-      .toArray();
+    const cogs = await collection.find({ userEmail: user.email }).toArray();
 
     // Convert to the same format as the previous COG data
     const cogMap = cogs.reduce((acc, cog) => {

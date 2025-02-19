@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { getToken } from "next-auth/jwt";
+import { createClient } from "@/libs/supabase/server";
 import connectMongo from "@/libs/mongoose";
 import Shipment from "@/models/Shipment";
 
 export async function GET(req) {
   try {
-    const token = await getToken({ req });
-    if (!token?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await connectMongo();
 
     const latestShipment = await Shipment.findOne({
-      userId: token.email,
+      userId: user.email,
     }).sort({ generatedAt: -1 });
 
     if (latestShipment?.shipments) {
@@ -54,8 +58,13 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const token = await getToken({ req });
-    if (!token?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -63,10 +72,10 @@ export async function POST(req) {
     await connectMongo();
 
     // Delete all existing shipment data for this user
-    await Shipment.deleteMany({ userId: token.email });
+    await Shipment.deleteMany({ userId: user.email });
 
     const shipment = new Shipment({
-      userId: token.email,
+      userId: user.email,
       shipments: data.shipments,
     });
 

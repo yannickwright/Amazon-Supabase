@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/libs/supabase/server";
 import clientPromise from "@/libs/mongo";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/libs/next-auth";
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,7 +22,7 @@ export async function POST(req) {
 
     // Create document with order data
     const orderDocument = {
-      userEmail: session.user.email,
+      userEmail: user.email,
       reportId,
       dateRange,
       data,
@@ -40,8 +44,13 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -51,7 +60,7 @@ export async function GET(req) {
 
     // Get all order data for this user, sorted by date range
     const orders = await collection
-      .find({ userEmail: session.user.email })
+      .find({ userEmail: user.email })
       .sort({ dateRange: 1 })
       .toArray();
 
