@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/libs/supabase/server";
-import clientPromise from "@/libs/mongo";
 
 export async function POST(req) {
   try {
@@ -16,58 +15,59 @@ export async function POST(req) {
 
     const { reportId, data } = await req.json();
 
-    const client = await clientPromise;
-    const db = client.db();
-    const collection = db.collection("returns");
+    // Delete existing returns data for this user
+    const { error: deleteError } = await supabase
+      .from("returns")
+      .delete()
+      .eq("user_id", user.id);
 
-    // Delete all existing returns data for this user
-    await collection.deleteMany({ userEmail: user.email });
+    if (deleteError) throw deleteError;
 
-    // Create document with report data
-    const returnDocument = {
-      userEmail: user.email,
-      reportId,
+    // Create new returns record
+    const { error: insertError } = await supabase.from("returns").insert({
+      user_id: user.id,
+      report_id: reportId,
       data,
-      createdAt: new Date(),
-    };
+    });
 
-    // Save new report to database
-    await collection.insertOne(returnDocument);
+    if (insertError) throw insertError;
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error saving returns:", error);
-    return NextResponse.json(
-      { error: "Failed to save returns" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const client = await clientPromise;
-    const db = client.db();
-    const collection = db.collection("returns");
-
     // Get the most recent returns data for this user
-    const returns = await collection
-      .find({ userEmail: session.user.email })
-      .sort({ createdAt: -1 })
+    const { data: returns, error } = await supabase
+      .from("returns")
+      .select("data")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
       .limit(1)
-      .toArray();
+      .single();
 
-    return NextResponse.json({ returns: returns[0]?.data || null });
+    if (error && error.code !== "PGRST116") {
+      // Ignore "no rows returned" error
+      throw error;
+    }
+
+    return NextResponse.json({ returns: returns?.data || null });
   } catch (error) {
     console.error("Error fetching returns:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch returns" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

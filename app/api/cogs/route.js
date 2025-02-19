@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/libs/supabase/server";
-import clientPromise from "@/libs/mongo";
 
 export async function POST(req) {
   try {
@@ -25,28 +24,32 @@ export async function POST(req) {
       );
     }
 
-    const client = await clientPromise;
-    const db = client.db();
-    const collection = db.collection("cogs");
+    // Delete existing COGs for this user
+    const { error: deleteError } = await supabase
+      .from("cogs")
+      .delete()
+      .eq("user_id", user.id);
 
-    // Convert cogs object to array of documents
+    if (deleteError) throw deleteError;
+
+    // Convert cogs object to array of records
     const cogsArray = Object.entries(cogs).map(([sku, cost]) => ({
-      userEmail: user.email,
+      user_id: user.id,
       sku,
       cost: parseFloat(cost),
-      updatedAt: new Date(),
     }));
 
-    // Delete existing COGs for this user and insert new ones
-    await collection.deleteMany({ userEmail: user.email });
-    if (cogsArray.length > 0) {
-      await collection.insertMany(cogsArray);
-    }
+    // Insert new COGs
+    const { error: insertError } = await supabase
+      .from("cogs")
+      .insert(cogsArray);
+
+    if (insertError) throw insertError;
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error saving COGs:", error);
-    return NextResponse.json({ error: "Failed to save COGs" }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -62,13 +65,15 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const client = await clientPromise;
-    const db = client.db();
-    const collection = db.collection("cogs");
+    // Get all COGs for this user
+    const { data: cogs, error } = await supabase
+      .from("cogs")
+      .select("sku, cost")
+      .eq("user_id", user.id);
 
-    const cogs = await collection.find({ userEmail: user.email }).toArray();
+    if (error) throw error;
 
-    // Convert to the same format as the previous COG data
+    // Convert to the same format as before
     const cogMap = cogs.reduce((acc, cog) => {
       acc[cog.sku] = cog.cost;
       return acc;
@@ -77,9 +82,6 @@ export async function GET(req) {
     return NextResponse.json({ cogs: cogMap });
   } catch (error) {
     console.error("Error fetching COGs:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch COGs" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
