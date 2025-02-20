@@ -15,20 +15,52 @@ export async function POST(req) {
 
     const { reportId, data } = await req.json();
 
-    // Delete existing returns data for this user
+    // Check if data is an array
+    if (!Array.isArray(data)) {
+      return NextResponse.json(
+        { error: "Invalid data format - expected an array" },
+        { status: 400 }
+      );
+    }
+
+    // Transform data into normalized format
+    const returnsData = data.map((item) => ({
+      user_id: user.id,
+      sku: item.sku || item.SKU,
+      asin: item.asin || item.ASIN,
+      order_id: item["order-id"] || item["Order ID"],
+      order_date: new Date(
+        item["order-date"] || item["Order Date"] || new Date()
+      ),
+      return_date: new Date(item["return-date"] || item["Return Date"]),
+      quantity_returned: parseInt(item.quantity || item.Quantity || 0),
+      refund_amount: parseFloat(
+        item["refund-amount"] || item["Refund Amount"] || 0
+      ),
+      reason_code: item.reason || item.Reason || "",
+      detailed_disposition:
+        item["detailed-disposition"] || item["Detailed Disposition"] || "",
+      status: item.status || item.Status || "",
+      return_type: item["return-type"] || item["Return Type"] || "",
+      return_condition:
+        item["return-condition"] || item["Return Condition"] || "",
+      resolution: item.resolution || item.Resolution || "",
+      report_id: reportId,
+    }));
+
+    // Delete existing returns for this report
     const { error: deleteError } = await supabase
       .from("returns")
       .delete()
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("report_id", reportId);
 
     if (deleteError) throw deleteError;
 
-    // Create new returns record
-    const { error: insertError } = await supabase.from("returns").insert({
-      user_id: user.id,
-      report_id: reportId,
-      data,
-    });
+    // Insert new returns
+    const { error: insertError } = await supabase
+      .from("returns")
+      .insert(returnsData);
 
     if (insertError) throw insertError;
 
@@ -51,21 +83,33 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the most recent returns data for this user
+    // Get all returns data for this user
     const { data: returns, error } = await supabase
       .from("returns")
-      .select("data")
+      .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+      .order("return_date", { ascending: false });
 
-    if (error && error.code !== "PGRST116") {
-      // Ignore "no rows returned" error
-      throw error;
-    }
+    if (error) throw error;
 
-    return NextResponse.json({ returns: returns?.data || null });
+    // Transform data back to the format expected by the frontend
+    const transformedReturns = returns.map((item) => ({
+      SKU: item.sku,
+      ASIN: item.asin,
+      "Order ID": item.order_id,
+      "Order Date": new Date(item.order_date).toLocaleDateString(),
+      "Return Date": new Date(item.return_date).toLocaleDateString(),
+      Quantity: item.quantity_returned,
+      "Refund Amount": item.refund_amount,
+      "Reason Code": item.reason_code,
+      "Detailed Disposition": item.detailed_disposition,
+      Status: item.status,
+      "Return Type": item.return_type,
+      "Return Condition": item.return_condition,
+      Resolution: item.resolution,
+    }));
+
+    return NextResponse.json({ returns: transformedReturns });
   } catch (error) {
     console.error("Error fetching returns:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

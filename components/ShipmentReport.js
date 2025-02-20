@@ -84,38 +84,6 @@ export default function ShipmentReport({
     setCurrentPage(1);
   }, [showDiscrepancies]);
 
-  const testShipments = async () => {
-    try {
-      setIsTestLoading(true);
-      setError(null);
-
-      const response = await apiClient.get("/amazon/shipments/test", {
-        timeout: 300000, // 5 minute timeout
-      });
-
-      if (!response?.payload?.ShipmentData) {
-        throw new Error("Invalid response format");
-      }
-
-      // Download the response as a JSON file
-      const blob = new Blob([JSON.stringify(response, null, 2)], {
-        type: "application/json",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `shipments-test-${response.payload.totalShipments}-total.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      setError(err.message || "Failed to test shipments");
-    } finally {
-      setIsTestLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-8">
       <div className="card bg-white w-full max-w-[1200px] mx-auto border-2 border-base-300 rounded-2xl shadow-[0_0_15px_2px_rgba(0,0,0,0.1)]">

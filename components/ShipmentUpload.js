@@ -7,73 +7,23 @@ export default function ShipmentUpload() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
 
   const generateReport = async () => {
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(false);
-
     try {
-      // First part - get all shipment IDs
-      const allShipmentsResponse = await apiClient.get(
-        "/amazon/shipments/test",
-        {
-          timeout: 300000,
-        }
-      );
+      setIsProcessing(true);
+      setError(null);
+      setSuccess(false);
 
-      if (!allShipmentsResponse?.payload?.ShipmentData) {
-        throw new Error("Invalid response from shipments list API");
-      }
-
-      const allShipmentIds = allShipmentsResponse.payload.ShipmentData.map(
-        (s) => s.ShipmentId
-      );
-
-      setProgress({
-        current: 0,
-        total: allShipmentIds.length,
-      });
-
-      // Process shipments in batches
-      const BATCH_SIZE = 10;
-      const allProcessedShipments = [];
-
-      for (let i = 0; i < allShipmentIds.length; i += BATCH_SIZE) {
-        const batchIds = allShipmentIds.slice(i, i + BATCH_SIZE);
-
-        const response = await apiClient.get("/amazon/shipments", {
-          params: {
-            shipmentIds: batchIds.join(","),
-          },
-        });
-
-        if (response?.payload?.payload?.ShipmentData) {
-          allProcessedShipments.push(...response.payload.payload.ShipmentData);
-        }
-
-        setProgress({
-          current: Math.min(i + BATCH_SIZE, allShipmentIds.length),
-          total: allShipmentIds.length,
-        });
-
-        if (i + BATCH_SIZE < allShipmentIds.length) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-        }
-      }
-
-      // Save to database
-      await apiClient.post("/shipments", {
-        shipments: allProcessedShipments,
-      });
+      // First get all shipment IDs
+      const response = await apiClient.get("/amazon/shipments");
+      console.log("Raw Amazon response:", response.data);
 
       setSuccess(true);
     } catch (err) {
+      console.error("Error:", err);
       setError(err.message || "Failed to generate report");
     } finally {
       setIsProcessing(false);
-      setProgress({ current: 0, total: 0 });
     }
   };
 
@@ -82,7 +32,7 @@ export default function ShipmentUpload() {
       <div className="card-body">
         <h2 className="card-title">Get Shipments Report</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Generate and save your Amazon FBA inbound shipment data.
+          Get your Amazon FBA inbound shipment data.
         </p>
 
         <div className="flex items-center gap-2">
@@ -94,9 +44,7 @@ export default function ShipmentUpload() {
             {isProcessing ? (
               <>
                 <span className="loading loading-spinner loading-xs"></span>
-                {progress.total > 0
-                  ? `Processing ${progress.current}/${progress.total}...`
-                  : "Processing..."}
+                Processing...
               </>
             ) : (
               "Get Report"
@@ -112,7 +60,7 @@ export default function ShipmentUpload() {
 
         {success && (
           <div className="alert alert-success mt-4">
-            <span>Shipment data successfully saved!</span>
+            <span>Shipment data retrieved!</span>
           </div>
         )}
       </div>

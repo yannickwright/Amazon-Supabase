@@ -45,69 +45,21 @@ export default function Shipments() {
     try {
       setIsLoading(true);
       setError(null);
-      setProgress({ current: 0, total: 0 });
 
-      // First part - get all shipment IDs
-      const allShipmentsResponse = await apiClient.get(
-        "/amazon/shipments/test",
-        {
-          timeout: 300000,
-        }
-      );
+      // Get shipments from Amazon and log them
+      const response = await apiClient.get("/amazon/shipments");
 
-      if (!allShipmentsResponse?.payload?.ShipmentData) {
-        throw new Error("Invalid response from shipments list API");
-      }
-
-      const allShipmentIds = allShipmentsResponse.payload.ShipmentData.map(
-        (s) => s.ShipmentId
-      );
-
-      setProgress({
-        current: 0,
-        total: allShipmentIds.length,
+      console.log("Response from Amazon:", {
+        shipments: response.data.shipments?.length || 0,
+        firstShipment: response.data.shipments?.[0],
+        shipmentIds: response.data.shipments?.map((s) => s.ShipmentId),
       });
 
-      // Process shipments in batches
-      const BATCH_SIZE = 10;
-      const allProcessedShipments = [];
-
-      for (let i = 0; i < allShipmentIds.length; i += BATCH_SIZE) {
-        const batchIds = allShipmentIds.slice(i, i + BATCH_SIZE);
-
-        const response = await apiClient.get("/amazon/shipments", {
-          params: {
-            shipmentIds: batchIds.join(","),
-          },
-        });
-
-        if (response?.payload?.payload?.ShipmentData) {
-          allProcessedShipments.push(...response.payload.payload.ShipmentData);
-        }
-
-        setProgress({
-          current: Math.min(i + BATCH_SIZE, allShipmentIds.length),
-          total: allShipmentIds.length,
-        });
-
-        if (i + BATCH_SIZE < allShipmentIds.length) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-        }
-      }
-
-      // Save to database with correct data structure
-      await apiClient.post("/shipments", {
-        shipments: allProcessedShipments,
-      });
-
-      // Refresh shipments from database
-      await fetchShipments();
-    } catch (err) {
-      console.error("Generate report error:", err);
-      setError(err.message || "Failed to generate report");
-    } finally {
       setIsLoading(false);
-      setProgress({ current: 0, total: 0 });
+    } catch (error) {
+      console.error("Error:", error);
+      setError(error.message);
+      setIsLoading(false);
     }
   };
 

@@ -31,10 +31,10 @@ export default function ReturnsUpload() {
             }
           );
 
-          // Save to database
+          // Save to database - reportData is the array directly
           await apiClient.post("/returns", {
             reportId,
-            data: reportData,
+            data: reportData, // Remove .data since the response is already the array
           });
 
           setSuccess(true);
