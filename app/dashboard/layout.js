@@ -21,11 +21,11 @@ export default async function LayoutPrivate({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-base-200/50">
+    <div className="flex h-screen bg-base-100">
       {/* Sidebar */}
-      <div className="w-64 bg-base-100 border-r border-base-300">
+      <div className="w-64 bg-base-200 border-r border-base-300">
         <div className="p-4">
-          <h1 className="text-xl font-bold flex items-center gap-2">
+          <h1 className="text-xl font-bold flex items-center gap-2 text-base-content">
             <span className="text-primary">📦</span> FBA Tools
           </h1>
         </div>
@@ -33,25 +33,25 @@ export default async function LayoutPrivate({ children }) {
         <nav className="mt-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+            className="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-300"
           >
             Dashboard
           </Link>
           <Link
             href="/dashboard/returns"
-            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+            className="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-300"
           >
             Returns
           </Link>
           <Link
             href="/dashboard/shipments"
-            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+            className="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-300"
           >
             Shipments
           </Link>
           <Link
             href="/dashboard/settings"
-            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+            className="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-300"
           >
             Settings
           </Link>
@@ -59,7 +59,7 @@ export default async function LayoutPrivate({ children }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-base-100">
         <div className="p-8">
           {/* Header */}
           <div className="flex justify-end mb-8">

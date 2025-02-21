@@ -59,10 +59,23 @@ module.exports = {
   },
   plugins: [require("daisyui")],
   daisyui: {
-    // Light & dark themes are added by default (it switches automatically based on OS settings)
-    // You can add another theme among the list of 30+
-    // Add "data-theme='theme_name" to any HTML tag to enable the 'theme_name' theme.
-    // https://daisyui.com/
-    themes: ["light", "dark"],
+    themes: [
+      {
+        dark: {
+          primary: "#3B82F6",
+          secondary: "#1D4ED8",
+          accent: "#60A5FA",
+          neutral: "#1E293B",
+          "base-100": "#e8effb",
+          "base-200": "#e8effb",
+          "base-300": "#e8effb",
+          "base-content": "#0F172A",
+          info: "#38BDF8",
+          success: "#22C55E",
+          warning: "#F59E0B",
+          error: "#EF4444",
+        },
+      },
+    ],
   },
 };
