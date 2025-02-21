@@ -309,15 +309,15 @@ export default function ShipmentReport({
                         </td>
                         <td>{shipment.DestinationFulfillmentCenterId}</td>
                         <td>{`${shipment.totalQuantityShipped}/${shipment.totalQuantityReceived}`}</td>
-                        <td>
+                        <td className="text-left">
                           {shipment.ShipmentStatus !== "CLOSED" ? (
                             <span>Pending</span>
                           ) : discrepancy === 0 ? (
                             "0"
                           ) : (
                             <span
-                              className={`${
-                                discrepancy < 0 ? "text-[#DC2626]" : ""
+                              className={`badge ${
+                                discrepancy < 0 ? "bg-[#FF9999]" : ""
                               }`}
                             >
                               {discrepancy}
