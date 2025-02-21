@@ -83,30 +83,40 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get all returns data for this user
-    const { data: returns, error } = await supabase
+    // Get all returns data for this user with pagination
+    const { count: totalCount } = await supabase
       .from("returns")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("return_date", { ascending: false });
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
 
-    if (error) throw error;
+    let allReturns = [];
+    const pageSize = 1000;
+    let page = 0;
 
-    // Transform data back to the format expected by the frontend
-    const transformedReturns = returns.map((item) => ({
-      SKU: item.sku,
-      ASIN: item.asin,
-      "Order ID": item.order_id,
-      "Order Date": new Date(item.order_date).toLocaleDateString(),
-      "Return Date": new Date(item.return_date).toLocaleDateString(),
-      Quantity: item.quantity_returned,
-      "Refund Amount": item.refund_amount,
-      "Reason Code": item.reason_code,
-      "Detailed Disposition": item.detailed_disposition,
-      Status: item.status,
-      "Return Type": item.return_type,
-      "Return Condition": item.return_condition,
-      Resolution: item.resolution,
+    while (page * pageSize < totalCount) {
+      const { data: returns, error } = await supabase
+        .from("returns")
+        .select("*")
+        .eq("user_id", user.id)
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+        .order("return_date", { ascending: false });
+
+      if (error) throw error;
+      if (returns?.length) allReturns = [...allReturns, ...returns];
+      page++;
+    }
+
+    // Transform data to ensure proper formatting
+    const transformedReturns = allReturns.map((returnItem) => ({
+      id: returnItem.id,
+      order_id: returnItem.order_id,
+      sku: returnItem.sku,
+      asin: returnItem.asin,
+      quantity_returned: parseInt(returnItem.quantity_returned) || 0,
+      refund_amount: parseFloat(returnItem.refund_amount) || 0,
+      return_date: returnItem.return_date,
+      status: returnItem.status || "Unknown",
+      detailed_disposition: returnItem.detailed_disposition || "Unknown",
     }));
 
     return NextResponse.json({ returns: transformedReturns });

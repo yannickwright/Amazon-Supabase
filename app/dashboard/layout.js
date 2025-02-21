@@ -26,7 +26,7 @@ export default async function LayoutPrivate({ children }) {
       <div className="w-64 bg-base-200 border-r border-base-300">
         <div className="p-4">
           <h1 className="text-xl font-bold flex items-center gap-2 text-base-content">
-            <span className="text-primary">📦</span> FBA Tools
+            <span className="text-primary">🔎</span> Sellers Lens
           </h1>
         </div>
 
@@ -36,6 +36,12 @@ export default async function LayoutPrivate({ children }) {
             className="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-300"
           >
             Dashboard
+          </Link>
+          <Link
+            href="/dashboard/orders"
+            className="flex items-center gap-3 px-4 py-3 text-base-content hover:bg-base-300"
+          >
+            Orders
           </Link>
           <Link
             href="/dashboard/returns"

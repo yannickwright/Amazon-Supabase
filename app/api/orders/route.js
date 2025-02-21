@@ -76,30 +76,39 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get all orders data for this user
-    const { data: orders, error } = await supabase
+    // Get all orders data for this user with pagination
+    const { count: totalCount } = await supabase
       .from("orders")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("order_date", { ascending: false });
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
 
-    if (error) throw error;
+    let allOrders = [];
+    const pageSize = 1000;
+    let page = 0;
 
-    // Transform data back to the format expected by the frontend
-    const transformedOrders = orders.map((item) => ({
-      "Seller SKU": item.sku,
-      ASIN: item.asin,
-      "Order ID": item.order_id,
-      "Purchase Date": new Date(item.order_date).toLocaleDateString(),
-      Quantity: item.quantity_ordered,
-      "Item Price": item.unit_price,
-      "Shipping Price": item.shipping_price,
-      "Shipping Tax": item.shipping_tax,
-      "Item Tax": item.item_tax,
-      Currency: item.currency,
-      "Order Status": item.order_status,
-      "Fulfillment Channel": item.fulfillment_channel,
-      "Sales Channel": item.sales_channel,
+    while (page * pageSize < totalCount) {
+      const { data: orders, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+        .order("order_date", { ascending: false });
+
+      if (error) throw error;
+      if (orders?.length) allOrders = [...allOrders, ...orders];
+      page++;
+    }
+
+    // Transform data to ensure proper formatting
+    const transformedOrders = allOrders.map((order) => ({
+      id: order.id,
+      order_id: order.order_id,
+      sku: order.sku,
+      asin: order.asin,
+      quantity_ordered: parseInt(order.quantity_ordered) || 0,
+      unit_price: parseFloat(order.unit_price) || 0,
+      order_status: order.order_status || "Unknown",
+      created_at: order.order_date,
     }));
 
     return NextResponse.json({ orders: transformedOrders });
