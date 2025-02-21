@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ButtonAccount from "@/components/ButtonAccount";
 import ShipmentReport from "@/components/ShipmentReport";
 import apiClient from "@/libs/api";
 
@@ -68,24 +67,16 @@ export default function Shipments() {
   };
 
   return (
-    <main className="min-h-screen p-8 pb-24">
-      <section className="max-w-[1200px] mx-auto space-y-8">
-        <ButtonAccount />
-        <h1 className="text-3xl md:text-4xl font-extrabold">
-          Shipment Reports
-        </h1>
-      </section>
-
-      <section className="mt-8">
-        <ShipmentReport
-          shipments={shipments}
-          isLoading={isLoading}
-          error={error}
-          setError={setError}
-          progress={progress}
-          onGenerateReport={generateReport}
-        />
-      </section>
-    </main>
+    <>
+      <h1 className="text-2xl font-bold mb-8">Shipment Reports</h1>
+      <ShipmentReport
+        shipments={shipments}
+        isLoading={isLoading}
+        error={error}
+        setError={setError}
+        progress={progress}
+        onGenerateReport={generateReport}
+      />
+    </>
   );
 }

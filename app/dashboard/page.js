@@ -7,48 +7,39 @@ export const dynamic = "force-dynamic";
 // See https://shipfa.st/docs/tutorials/private-page
 export default async function Dashboard() {
   return (
-    <main className="min-h-screen p-8 pb-24">
-      <section className="max-w-xl mx-auto space-y-8">
-        <ButtonAccount />
-        <h1 className="text-3xl md:text-4xl font-extrabold">Dashboard</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <a
-            href="/dashboard/returns"
-            className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-          >
-            <div className="card-body">
-              <h2 className="card-title">Returns Analysis</h2>
-              <p className="text-base-content/70">
-                View Amazon Customer Returns Data
-              </p>
-            </div>
-          </a>
-
-          <a
-            href="/dashboard/shipments"
-            className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-          >
-            <div className="card-body">
-              <h2 className="card-title">Shipments</h2>
-              <p className="text-base-content/70">
-                View FBA Inbound Shipment Data
-              </p>
-            </div>
-          </a>
-
-          <a
-            href="/dashboard/settings"
-            className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-          >
-            <div className="card-body">
-              <h2 className="card-title">Settings</h2>
-              <p className="text-base-content/70">Manage your data sources</p>
-            </div>
-          </a>
-          {/* Add more dashboard cards here as needed */}
+    <>
+      <h1 className="text-2xl font-bold mb-8">Dashboard</h1>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="card bg-base-100 shadow">
+          <div className="card-body">
+            <div className="text-base-content/70">Total Returns</div>
+            <div className="text-2xl font-bold">2,221</div>
+            <div className="text-success text-sm">↑ 12%</div>
+          </div>
         </div>
-      </section>
-    </main>
+        <div className="card bg-base-100 shadow">
+          <div className="card-body">
+            <div className="text-base-content/70">Active Shipments</div>
+            <div className="text-2xl font-bold">14</div>
+            <div className="text-error text-sm">↓ 2%</div>
+          </div>
+        </div>
+        <div className="card bg-base-100 shadow">
+          <div className="card-body">
+            <div className="text-base-content/70">Total Fees</div>
+            <div className="text-2xl font-bold">£1,423</div>
+            <div className="text-success text-sm">↑ 8%</div>
+          </div>
+        </div>
+        <div className="card bg-base-100 shadow">
+          <div className="card-body">
+            <div className="text-base-content/70">FBA Items</div>
+            <div className="text-2xl font-bold">78%</div>
+            <div className="text-error text-sm">↓ 5%</div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

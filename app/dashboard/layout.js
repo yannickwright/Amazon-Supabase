@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/libs/supabase/server";
 import config from "@/config";
+import ButtonAccount from "@/components/ButtonAccount";
+import Link from "next/link";
 
 // This is a server-side component to ensure the user is logged in.
 // If not, it will redirect to the login page.
@@ -18,5 +20,56 @@ export default async function LayoutPrivate({ children }) {
     redirect(config.auth.loginUrl);
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex h-screen bg-base-200/50">
+      {/* Sidebar */}
+      <div className="w-64 bg-base-100 border-r border-base-300">
+        <div className="p-4">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <span className="text-primary">📦</span> FBA Tools
+          </h1>
+        </div>
+
+        <nav className="mt-4">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+          >
+            Dashboard
+          </Link>
+          <Link
+            href="/dashboard/returns"
+            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+          >
+            Returns
+          </Link>
+          <Link
+            href="/dashboard/shipments"
+            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+          >
+            Shipments
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-3 px-4 py-3 text-base-content/70 hover:bg-base-200 hover:text-base-content"
+          >
+            Settings
+          </Link>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex justify-end mb-8">
+            <ButtonAccount />
+          </div>
+
+          {/* Page Content */}
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 }
