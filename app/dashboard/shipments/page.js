@@ -21,20 +21,24 @@ export default function Shipments() {
       const response = await apiClient.get("/shipments");
       console.log("API Response:", response);
 
-      // Sort shipments by createdDate in descending order (newest first)
-      const sortedShipments = [...response.data].sort((a, b) => {
-        // Parse the full datetime string
-        const dateA = new Date(
-          a.createdDate.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1")
-        );
-        const dateB = new Date(
-          b.createdDate.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1")
-        );
+      // Get shipments array from response and handle potential undefined
+      const shipmentsData = response.shipments || [];
 
-        return dateB - dateA;
+      // Sort shipments by createdDate in descending order (newest first)
+      const sortedShipments = [...shipmentsData].sort((a, b) => {
+        // Parse dates and ensure UTC to avoid timezone issues
+        const dateA = new Date(a.createdDate + "Z"); // Add Z to force UTC
+        const dateB = new Date(b.createdDate + "Z"); // Add Z to force UTC
+
+        // Sort in descending order (most recent first)
+        if (dateA > dateB) return -1;
+        if (dateA < dateB) return 1;
+
+        // If dates are equal, sort by ShipmentId as secondary sort
+        return b.ShipmentId.localeCompare(a.ShipmentId);
       });
 
-      setShipments(sortedShipments || []);
+      setShipments(sortedShipments);
     } catch (err) {
       console.error("Fetch error:", err);
       setError("Failed to load existing shipments");

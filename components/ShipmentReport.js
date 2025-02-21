@@ -17,11 +17,21 @@ export default function ShipmentReport({
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
 
-  // Get unique statuses from shipments
-  const statuses = [
+  // Define all possible shipment statuses
+  const ALL_SHIPMENT_STATUSES = [
     "ALL",
-    ...new Set(shipments.map((s) => s.ShipmentStatus)),
-  ].sort();
+    "WORKING",
+    "READY_TO_SHIP",
+    "IN_TRANSIT",
+    "DELIVERED",
+    "CHECKED_IN",
+    "RECEIVING",
+    "CLOSED",
+    "CANCELLED",
+  ];
+
+  // Use this instead of dynamic status generation
+  const statuses = ALL_SHIPMENT_STATUSES;
 
   // Filter shipments based on selected statuses and discrepancies
   const filteredShipments = shipments.filter((shipment) => {
@@ -30,7 +40,8 @@ export default function ShipmentReport({
       selectedStatuses.has(shipment.ShipmentStatus);
 
     const discrepancy =
-      shipment.totalQuantityReceived - shipment.totalQuantityShipped;
+      parseInt(shipment.totalQuantityReceived) -
+      parseInt(shipment.totalQuantityShipped);
     const discrepancyMatch =
       showDiscrepancies === "ALL" ||
       (showDiscrepancies === "WITH_DISCREPANCIES" &&
@@ -141,29 +152,37 @@ export default function ShipmentReport({
 
               <div
                 id="status-filter"
-                className="hidden absolute right-[400px] top-1 z-10"
+                className="hidden absolute right-[235px] top-0 z-10 bg-transparent p-2"
               >
-                <div className="flex flex-row items-center gap-6">
+                <div className="flex flex-row items-center gap-2 -mt-1">
                   {statuses.map((status) => (
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      className={`text-sm font-inter px-3 py-1 rounded-full transition-colors ${
+                      className={`text-xs font-inter px-2 py-1 rounded-full whitespace-nowrap transition-colors ${
                         selectedStatuses.has(status)
                           ? "bg-[#34A853] text-white"
                           : "bg-gray-300 text-gray-600 hover:bg-gray-400"
                       }`}
                     >
                       {status === "ALL"
-                        ? "All Statuses"
+                        ? "Show All"
                         : status === "IN_TRANSIT"
                         ? "In Transit"
+                        : status === "READY_TO_SHIP"
+                        ? "Ready to Ship"
                         : status === "RECEIVING"
                         ? "Receiving"
                         : status === "CLOSED"
                         ? "Closed"
                         : status === "CANCELLED"
                         ? "Cancelled"
+                        : status === "WORKING"
+                        ? "Working"
+                        : status === "DELIVERED"
+                        ? "Delivered"
+                        : status === "CHECKED_IN"
+                        ? "Checked In"
                         : status}
                     </button>
                   ))}
@@ -173,7 +192,7 @@ export default function ShipmentReport({
 
             <div className="relative inline-block">
               <button
-                className="text-sm font-medium min-h-0 h-8 px-3 py-0 flex items-center gap-1 bg-[#1a73e8] text-white rounded-full w-fit cursor-pointer"
+                className="text-sm font-medium min-h-0 h-8 px-3 py-0 flex items-center gap-1 bg-[#1a73e8] text-white rounded-full w-[175px] justify-between cursor-pointer whitespace-nowrap"
                 onClick={() =>
                   document
                     .getElementById("discrepancy-filter")
@@ -197,22 +216,22 @@ export default function ShipmentReport({
 
               <div
                 id="discrepancy-filter"
-                className="hidden absolute left-[185px] top-1 z-10"
+                className="hidden absolute left-[175px] top-0 z-10 bg-transparent p-2"
               >
-                <div className="flex flex-row items-center gap-6">
+                <div className="flex flex-row items-center gap-2 -mt-1">
                   <button
                     onClick={() => setShowDiscrepancies("ALL")}
-                    className={`text-sm font-inter px-3 py-1 rounded-full transition-colors ${
+                    className={`text-xs font-inter px-2 py-1 rounded-full whitespace-nowrap transition-colors ${
                       showDiscrepancies === "ALL"
                         ? "bg-[#34A853] text-white"
-                        : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                        : "bg-gray-300 text-gray-600 hover:bg-gray-400"
                     }`}
                   >
                     Show All
                   </button>
                   <button
                     onClick={() => setShowDiscrepancies("WITH_DISCREPANCIES")}
-                    className={`text-sm font-inter px-3 py-1 rounded-full transition-colors ${
+                    className={`text-xs font-inter px-2 py-1 rounded-full whitespace-nowrap transition-colors ${
                       showDiscrepancies === "WITH_DISCREPANCIES"
                         ? "bg-[#34A853] text-white"
                         : "bg-gray-300 text-gray-600 hover:bg-gray-400"
@@ -226,80 +245,104 @@ export default function ShipmentReport({
           </div>
 
           {filteredShipments.length > 0 && (
-            <div className="overflow-x-auto rounded-lg shadow-xl border-2 border-base-300 bg-white">
+            <div className="overflow-x-auto bg-base-100 rounded-xl shadow-xl">
               <table className="table table-zebra">
                 <thead>
-                  <tr>
-                    <th className="px-8">Shipment ID</th>
-                    <th className="px-16">Created Date</th>
-                    <th className="px-8">Status</th>
-                    <th className="px-8">Destination</th>
-                    <th className="px-8">Shipped/Received</th>
-                    <th className="px-8">Discrepancies</th>
-                    <th className="px-8">View in SC</th>
+                  <tr className="text-base-content/70">
+                    <th className="font-normal">Shipment ID</th>
+                    <th className="font-normal">Created Date</th>
+                    <th className="font-normal">Status</th>
+                    <th className="font-normal">Destination</th>
+                    <th className="font-normal">Shipped/Received</th>
+                    <th className="font-normal">Discrepancies</th>
+                    <th className="font-normal">View in SC</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedShipments.map((shipment) => {
                     const discrepancy =
-                      shipment.totalQuantityReceived -
-                      shipment.totalQuantityShipped;
+                      parseInt(shipment.totalQuantityReceived) -
+                      parseInt(shipment.totalQuantityShipped);
                     const sellerCentralUrl = `https://sellercentral.amazon.co.uk/fba/inbound-shipment/summary/${shipment.ShipmentId}/contents`;
 
                     return (
                       <tr key={shipment.ShipmentId}>
-                        <td className="font-mono">{shipment.ShipmentId}</td>
-                        <td>{shipment.createdDate?.split(" ")[0]}</td>
+                        <td className="font-normal">{shipment.ShipmentId}</td>
+                        <td>
+                          {(() => {
+                            // Extract date from shipment name which is in format "FBA STA (DD/MM/YYYY ..."
+                            const dateMatch = shipment.ShipmentName.match(
+                              /\((\d{2}\/\d{2}\/\d{4})/
+                            );
+                            if (dateMatch) {
+                              // dateMatch[1] will contain the date part "DD/MM/YYYY"
+                              return dateMatch[1];
+                            }
+                            // Fallback to empty string if no date found
+                            return "";
+                          })()}
+                        </td>
                         <td>
                           <span
-                            className={`badge ${getStatusBadgeColor(
-                              shipment.ShipmentStatus
-                            )}`}
+                            className={`badge ${
+                              shipment.ShipmentStatus === "RECEIVING"
+                                ? "bg-[#E9D5FD] text-[#9333EA]"
+                                : shipment.ShipmentStatus === "CANCELLED"
+                                ? "bg-[#FEE2E2] text-[#DC2626]"
+                                : shipment.ShipmentStatus === "CLOSED"
+                                ? "bg-[#DCFCE7] text-[#16A34A]"
+                                : shipment.ShipmentStatus === "IN_TRANSIT"
+                                ? "bg-[#E0F2FE] text-[#0284C7]" // Light blue
+                                : shipment.ShipmentStatus === "WORKING"
+                                ? "bg-[#FEF3C7] text-[#D97706]" // Light yellow
+                                : shipment.ShipmentStatus === "READY_TO_SHIP"
+                                ? "bg-[#F3E8FF] text-[#9333EA]" // Light purple
+                                : shipment.ShipmentStatus === "DELIVERED"
+                                ? "bg-[#E0E7FF] text-[#4F46E5]" // Light indigo
+                                : shipment.ShipmentStatus === "CHECKED_IN"
+                                ? "bg-[#DBEAFE] text-[#2563EB]" // Light blue
+                                : "badge-ghost"
+                            }`}
                           >
                             {shipment.ShipmentStatus}
                           </span>
                         </td>
                         <td>{shipment.DestinationFulfillmentCenterId}</td>
+                        <td>{`${shipment.totalQuantityShipped}/${shipment.totalQuantityReceived}`}</td>
                         <td>
-                          {shipment.totalQuantityShipped}/
-                          {shipment.totalQuantityReceived}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              discrepancy < 0 &&
-                              shipment.ShipmentStatus === "CLOSED"
-                                ? "badge-error"
-                                : "badge-ghost"
-                            }`}
-                          >
-                            {shipment.ShipmentStatus === "CLOSED"
-                              ? discrepancy
-                              : "Pending"}
-                          </span>
+                          {shipment.ShipmentStatus !== "CLOSED" ? (
+                            <span>Pending</span>
+                          ) : discrepancy === 0 ? (
+                            "0"
+                          ) : (
+                            <span
+                              className={`${
+                                discrepancy < 0 ? "text-[#DC2626]" : ""
+                              }`}
+                            >
+                              {discrepancy}
+                            </span>
+                          )}
                         </td>
                         <td>
                           <a
                             href={sellerCentralUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn btn-ghost btn-sm"
+                            className="btn btn-ghost btn-xs"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                              className="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4"
                             >
                               <path
-                                fillRule="evenodd"
-                                d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
-                                clipRule="evenodd"
-                              />
-                              <path
-                                fillRule="evenodd"
-                                d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
-                                clipRule="evenodd"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
                               />
                             </svg>
                           </a>
